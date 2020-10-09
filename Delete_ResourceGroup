@@ -1,0 +1,14 @@
+Param(
+ [Parameter (Mandatory= $true)]
+ [string]$ResourceGroup
+)
+
+#Service Principal Parameters
+$Thumbprint = 'YOUR-THUMBPRINT-HERE'
+$TenantId = 'YOUR-TENANTID-HERE’
+$ApplicationId = 'YOUR-APPLICATIONID-HERE’
+
+#Service Principal Authentication
+Connect-AzAccount -CertificateThumbprint $Thumbprint -ApplicationId $ApplicationId -Tenant $TenantId -ServicePrincipal
+
+Remove-AzResourceGroup -ResourceGroupName $ResourceGroup -Force
