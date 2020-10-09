@@ -1,0 +1,9 @@
+#Azure PowerShell Script to create a virtual machine snapshot
+$resourceGroupName = 'YOUR-RESOURCEGROUP'
+$vmName = 'YOUR-VM-NAME'
+$location = 'centralus' 
+$snapshotName = 'SNAPSHOT-NAME'
+$vm = Get-AzVM -Name $vmName -ResourceGroupName $resourceGroupName
+$disk = Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $vm.StorageProfile.OsDisk.Name
+$snapshotConfig =  New-AzSnapshotConfig -SourceUri $disk.Id -OsType Windows -CreateOption Copy -Location $location
+$snapShot = New-AzSnapshot -Snapshot $snapshotConfig -SnapshotName $snapshotName -ResourceGroupName $ResourceGroupName
