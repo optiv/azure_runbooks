@@ -57,9 +57,9 @@ $virtualNetwork | Set-AzVirtualNetwork
 $vnet = Get-AzVirtualNetwork -Name $VirtualNetworkName -ResourceGroupName $ResourceGroupName
 $subnetID = Get-AzVirtualNetworkSubnetConfig -Name $subnetName -VirtualNetwork $vnet
 
-#Disk Creation ****NOTE: In this section I am using a snapshot**** In order to use a snapshot of your own, change the following line in the code below /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/resourceGroups/RPA-Template/providers/Microsoft.Compute/snapshots/RPA-Snapshot01)
+#Disk Creation ****NOTE: In this section I am using a snapshot**** In order to use a snapshot of your own, change the following line in the code below /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/AND-PATH-TO-THE-SNAPSHOT)
 
-$osDisk = New-AzDisk -DiskName $osDiskName -Disk (New-AzDiskConfig  -Location $location -CreateOption Copy -SourceResourceId /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/resourceGroups/RPA-Template/providers/Microsoft.Compute/snapshots/RPA-Snapshot01)  -ResourceGroupName $ResourceGroupName
+$osDisk = New-AzDisk -DiskName $osDiskName -Disk (New-AzDiskConfig  -Location $location -CreateOption Copy -SourceResourceId /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/AND-PATH-TO-THE-SNAPSHOT)  -ResourceGroupName $ResourceGroupName
 $ResourceGroupName
 
 #Nic Creation
