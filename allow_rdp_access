@@ -1,0 +1,20 @@
+#Service Principal Parameters
+$Thumbprint = 'YOUR-THUMBPRINT-HERE'
+$TenantId = 'YOUR-TENANTID-HERE’
+$ApplicationId = 'YOUR-APPLICATIONID-HERE’
+
+#Service Principal Authentication
+Connect-AzAccount -CertificateThumbprint $Thumbprint -ApplicationId $ApplicationId -Tenant $TenantId -ServicePrincipal
+
+$RGname="YOUR-RESOURCEGROUP-NAME"
+$port=3389
+$rulename="allowAppPort$port"
+$nsgname="NETWORK-SECURITY-GROUP-NAME"
+# Get the NSG resource
+$nsg = Get-AzNetworkSecurityGroup -Name $nsgname -ResourceGroupName $RGname
+# Add the inbound security rule.
+$nsg | Add-AzNetworkSecurityRuleConfig -Name $rulename -Description "Allow app port" -Access Allow `
+    -Protocol * -Direction Inbound -Priority 3891 -SourceAddressPrefix "*" -SourcePortRange * `
+    -DestinationAddressPrefix * -DestinationPortRange $port
+# Update the NSG.
+$nsg | Set-AzNetworkSecurityGroup
