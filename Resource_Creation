@@ -1,0 +1,79 @@
+#Resource Creation Script
+#Required Parameters
+Param(
+ [Parameter (Mandatory= $true)]
+ [string]$owner,
+ [Parameter (Mandatory= $true)]
+ [string]$vendor,
+ [Parameter (Mandatory= $true)]
+ [string]$SourceRDPAddress
+)
+
+#Service Principal Parameters
+$Thumbprint = 'YOUR-THUMBPRINT-HERE'
+$TenantId = 'YOUR-TENANTID-HERE’
+$ApplicationId = 'YOUR-APPLICATIONID-HERE’
+
+#Service Principal Authentication
+Connect-AzAccount -CertificateThumbprint $Thumbprint -ApplicationId $ApplicationId -Tenant $TenantId -ServicePrincipal
+
+#Additional Parameters
+ $ResourceGroupName = "$vendor-ResourceGroup"
+ $location = 'centralus'
+ $VirtualNetworkName = "$vendor-VirtualNetwork"
+ $vnetname = "$vendor-vnet"
+ $subnetName = 'default-subnet'
+ $osDiskName = "$vendor-osDisk"
+ $nicName = "$vendor-nic"
+ $templateVMName = "$vendor-VM"
+ $PublicIPName = "$vendor-PublicIP"
+ $ipconfigname = 'ipconfig1'
+
+#ResourceGroup Creation
+New-AzResourceGroup -Name $ResourceGroupName -Location $location -Force
+
+#Tag ResourceGroup
+$tags = @{"Owner"="$owner"}
+$resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
+Update-AzTag -ResourceId $resourceGroup.ResourceId -Tag $tags -Operation Merge
+
+#Network Creation
+$virtualNetwork = New-AzVirtualNetwork `
+  -ResourceGroupName $ResourceGroupName `
+  -Location $location `
+  -Name $VirtualNetworkName `
+  -AddressPrefix 172.16.0.0/16
+
+#Subnet Creation 
+$subnetConfig = Add-AzVirtualNetworkSubnetConfig `
+  -Name $subnetName `
+  -AddressPrefix 172.16.3.0/24 `
+  -VirtualNetwork $virtualNetwork
+
+#Associate the subnet to the virtual network
+$virtualNetwork | Set-AzVirtualNetwork
+
+#Network Creation w/ named path for OS DISK
+$vnet = Get-AzVirtualNetwork -Name $VirtualNetworkName -ResourceGroupName $ResourceGroupName
+$subnetID = Get-AzVirtualNetworkSubnetConfig -Name $subnetName -VirtualNetwork $vnet
+
+#Disk Creation ****NOTE: In this section I am using a snapshot**** In order to use a snapshot of your own, change the following line in the code below /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/resourceGroups/RPA-Template/providers/Microsoft.Compute/snapshots/RPA-Snapshot01)
+
+$osDisk = New-AzDisk -DiskName $osDiskName -Disk (New-AzDiskConfig  -Location $location -CreateOption Copy -SourceResourceId /subscriptions/YOUR-SUBSCRIPTION-ID-HERE/resourceGroups/RPA-Template/providers/Microsoft.Compute/snapshots/RPA-Snapshot01)  -ResourceGroupName $ResourceGroupName
+$ResourceGroupName
+
+#Nic Creation
+$nic = New-AzNetworkInterface -Name $nicName -ResourceGroupName $ResourceGroupName -Location $location -SubnetId $subnetID.Id -Force
+
+#Virtual Machine Object Creation
+$vmConfig = New-AzVMConfig -VMName $templateVMName -VMSize 'Standard_B2s'
+
+#Add The Network Interface
+$vm = Add-AzVMNetworkInterface -VM $vmConfig -Id $nic.Id
+
+#Add the OS to Disk
+$vm = Set-AzVMOSDisk -VM $vm -ManagedDiskId $osDisk.Id -StorageAccountType Standard_LRS -DiskSizeInGB 128 -CreateOption Attach -Windows
+
+#Create the VM Template
+New-AzVM -ResourceGroupName $ResourceGroupName -Location $location -VM $vm
+
