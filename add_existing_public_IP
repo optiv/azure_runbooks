@@ -1,0 +1,30 @@
+#Note: The Research resource group contains the allowed Public IP that is added to the new VM in a different resource group. 
+#Parameters
+
+Param(
+ [Parameter (Mandatory= $true)]
+ [string]$vendor,
+ [string]$ResourceGroupName = "Research",
+ [string]$VirtualNetworkName = "$vendor-VirtualNetwork",
+ [string]$PublicIPName = "$vendor-PublicIP",
+ [string]$ipconfigname = 'ipconfig1',
+ [string]$NicName = "$vendor-Nic",
+ [string]$SubnetName = 'default'
+)
+
+#Service Principal Authentication
+$Thumbprint = 'YOUR-THUMBPRINT-HERE'
+$TenantId = 'YOUR-TENANTID-HERE'
+$ApplicationId = 'YOUR-APPLICATIONID-HERE'
+Connect-AzAccount -CertificateThumbprint $Thumbprint -ApplicationId $ApplicationId -Tenant $TenantId -ServicePrincipal
+
+#Create New Public IP Address
+#New-AzPublicIpAddress -Name RPAPublicIP -ResourceGroupName $ResourceGroupName -AllocationMethod Dynamic -Location centralus
+
+$vnet = Get-AzVirtualNetwork -Name $VirtualNetwork -ResourceGroupName $ResourceGroupName 
+$subnet = Get-AzVirtualNetworkSubnetConfig -Name $SubnetName -VirtualNetwork $vnet
+$nic = Get-AzNetworkInterface -Name $NicName -ResourceGroupName $ResourceGroupName 
+#PublicIP is in a different ResourceGroup and has static IP needed for testing.
+$pip = Get-AzPublicIpAddress -Name $PublicIPName -ResourceGroupName Research
+$nic | Set-AzNetworkInterfaceIpConfig -Name $ipconfigname -PublicIPAddress $pip -Subnet $subnet
+$nic | Set-AzNetworkInterface
