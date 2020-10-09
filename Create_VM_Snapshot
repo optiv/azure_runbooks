@@ -1,4 +1,13 @@
 #Azure PowerShell Script to create a virtual machine snapshot
+
+#Service Principal Parameters
+$Thumbprint = 'YOUR-THUMBPRINT-HERE'
+$TenantId = 'YOUR-TENANTID-HERE’
+$ApplicationId = 'YOUR-APPLICATIONID-HERE’
+
+#Service Principal Authentication
+Connect-AzAccount -CertificateThumbprint $Thumbprint -ApplicationId $ApplicationId -Tenant $TenantId -ServicePrincipal
+
 $resourceGroupName = 'YOUR-RESOURCEGROUP'
 $vmName = 'YOUR-VM-NAME'
 $location = 'centralus' 
